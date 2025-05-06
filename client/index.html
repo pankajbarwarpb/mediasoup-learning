@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+      <div>
+        <div>mediasoup sample</div>
+      </div>
+      <div>
+        <div>
+          <video id="localVideo" controls autoplay playsinline></video>
+          <div>
+            <div>
+              <button disabled id="btn_webcam">Camera</button>
+              <span id="webcam_status"></span>
+            </div>
+            <div>
+              <button disabled id="btn_screen">Camera</button>
+              <span id="screen_status"></span>
+            </div>
+            <div>
+              <button disabled id="btn_subscribe">Camera</button>
+              <span id="subscribe_status"></span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <video id="remoteVideo" controls autoplay playsinline></video>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    window.localStorage.setItem("debug", "mediasoup-client:*");
+  </script>
+  <script type="text/javascript" src="/src/app-bundle.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</html>
