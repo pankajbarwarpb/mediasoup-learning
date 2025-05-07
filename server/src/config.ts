@@ -43,7 +43,7 @@ export const config = {
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate": 1000,
           },
-        }
+        },
       ] as RtpCodecCapability[],
     } as RouterOptions,
 
@@ -55,6 +55,8 @@ export const config = {
           announcedIp: "127.0.0.1", // replace by public IP address
         },
       ] as TransportListenInfo[],
+      maxIncomeBitrate: 1500000,
+      initialAvailableOutgoingBitrate: 1000000,
     },
   },
 };

@@ -3,33 +3,77 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>mediasoup sample</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div>
-      <div>
-        <div>mediasoup sample</div>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="max-w-4xl mx-auto p-6">
+      <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-center">mediasoup sample</h1>
       </div>
-      <div>
-        <div>
-          <video id="localVideo" controls autoplay playsinline></video>
-          <div>
-            <div>
-              <button disabled id="btn_webcam">Camera</button>
-              <span id="webcam_status"></span>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Local video and controls -->
+        <div class="space-y-4">
+          <video
+            id="localVideo"
+            class="w-full rounded shadow"
+            controls
+            autoplay
+            playsinline
+          ></video>
+
+          <div class="space-y-2">
+            <div
+              class="flex items-center justify-between bg-white p-3 rounded shadow"
+            >
+              <button
+                disabled
+                id="btn_webcam"
+                class="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+              >
+                Camera
+              </button>
+              <span id="webcam_status" class="text-sm text-gray-600"></span>
             </div>
-            <div>
-              <button disabled id="btn_screen">Camera</button>
-              <span id="screen_status"></span>
+            <div
+              class="flex items-center justify-between bg-white p-3 rounded shadow"
+            >
+              <button
+                disabled
+                id="btn_screen"
+                class="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
+              >
+                Screen
+              </button>
+              <span id="screen_status" class="text-sm text-gray-600"></span>
             </div>
-            <div>
-              <button disabled id="btn_subscribe">Camera</button>
-              <span id="subscribe_status"></span>
+            <div
+              class="flex items-center justify-between bg-white p-3 rounded shadow"
+            >
+              <button
+                disabled
+                id="btn_subscribe"
+                class="px-4 py-2 bg-purple-500 text-white rounded disabled:opacity-50"
+              >
+                Subscribe
+              </button>
+              <span id="subscribe_status" class="text-sm text-gray-600"></span>
             </div>
           </div>
         </div>
+
+        <span id="text-publish"></span>
+
+        <!-- Remote video -->
         <div>
-          <video id="remoteVideo" controls autoplay playsinline></video>
+          <video
+            id="remoteVideo"
+            class="w-full rounded shadow"
+            controls
+            autoplay
+            playsinline
+          ></video>
         </div>
       </div>
     </div>

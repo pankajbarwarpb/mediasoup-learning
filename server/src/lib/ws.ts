@@ -1,9 +1,11 @@
 import WebSocket from "ws";
 import { createWorker } from "./worker";
-import { Router, Worker } from "mediasoup/node/lib/types";
-import { config } from "../config";
+import { Producer, Router, Transport } from "mediasoup/node/lib/types";
+import { createWebrtcTransport } from "./createWebrtcTransport";
 
 let mediasoupRouter: Router;
+let producerTransport: Transport;
+let producer: Producer;
 
 const WebsocketConnection = async (websocket: WebSocket.Server) => {
   try {
@@ -26,7 +28,15 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
         case "getRouterRtpCapabilities":
           onRouterRtpCapabilities(event, ws);
           break;
-
+        case "createProducerTransport":
+          onCreateProducerTransport(event, ws);
+          break;
+        case "connectProducerTransport":
+          onConnectProducerTransport(event, ws);
+          break;
+        case "produce":
+          onProduce(event, ws, websocket);
+          break;
         default:
           break;
       }
@@ -41,9 +51,41 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
     });
   });
 
-  const onRouterRtpCapabilities = (event: object, ws: WebSocket) => {
+  const onProduce = async (
+    event: any,
+    ws: WebSocket,
+    websocket: WebSocket.Server
+  ) => {
+    const { kind, rtpParameters } = event;
+    producer = await producerTransport.produce({ kind, rtpParameters });
+    const resp = {
+      id: producer.id,
+    };
+
+    send(ws, "produced", resp);
+    broadcast(websocket, "newProducer", "new user");
+  };
+
+  const onRouterRtpCapabilities = (event: string, ws: WebSocket) => {
     send(ws, "routerCapabilities", mediasoupRouter.rtpCapabilities);
-    console.log({ routerCapabilities: JSON.stringify(mediasoupRouter.rtpCapabilities, null, 2) });
+  };
+
+  const onCreateProducerTransport = async (event: string, ws: WebSocket) => {
+    try {
+      const { transport, params } = await createWebrtcTransport(
+        mediasoupRouter
+      );
+      producerTransport = transport;
+      send(ws, "producerTransportCreated", params);
+    } catch (error) {
+      console.error(error);
+      send(ws, "error", error);
+    }
+  };
+
+  const onConnectProducerTransport = async (event: any, ws: WebSocket) => {
+    await producerTransport.connect({ dtlsParameters: event.dtlsPrameters });
+    send(ws, "producerConnected", "producer connected");
   };
 
   const IsJsonString = (str: string) => {
@@ -64,6 +106,18 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
     const resp = JSON.stringify(message);
 
     ws.send(resp);
+  };
+
+  const broadcast = (ws: WebSocket.Server, type: string, msg: any) => {
+    const message = {
+      type,
+      data: msg,
+    };
+    const resp = JSON.stringify(message);
+
+    ws.clients.forEach((client) => {
+      client.send(resp);
+    });
   };
 };
 
