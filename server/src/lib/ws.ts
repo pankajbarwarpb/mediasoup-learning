@@ -84,7 +84,8 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
   };
 
   const onConnectProducerTransport = async (event: any, ws: WebSocket) => {
-    await producerTransport.connect({ dtlsParameters: event.dtlsPrameters });
+    console.log({ event, dtlsParameters: event?.dtlsParameters?.fingerprints});
+    await producerTransport.connect({ dtlsParameters: event.dtlsParameters });
     send(ws, "producerConnected", "producer connected");
   };
 

@@ -6,6 +6,7 @@ let btnCam,
   btnSub,
   textWebcam,
   textScreen,
+  textPublish,
   localVideo,
   remoteVideo,
   remoteStream,
@@ -28,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnSub = document.getElementById("btn_subscribe");
   textWebcam = document.getElementById("webcam_status");
   textScreen = document.getElementById("screen_status");
-  textPublish = document.getDisplayMedia('text-publish')
+  textPublish = document.getElementById("text-publish");
 
   // button event listeners
   btnCam.addEventListener("click", publish);
@@ -37,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const connect = () => {
-  const socket = new WebSocket(websocketURL); // remove const
+  socket = new WebSocket(websocketURL);
   socket.onopen = () => {
     // start our socket request
     console.log("Socket opened");
@@ -65,6 +66,8 @@ const connect = () => {
       return;
     }
 
+    console.log("SOCKET MESSAGE: ", { resp: event.data });
+
     const resp = JSON.parse(event.data);
     switch (resp.type) {
       case "routerCapabilities":
@@ -87,8 +90,19 @@ const onProducerTransportCreated = async (event) => {
     return;
   }
 
-  const device = new mediasoup.Device(); // remove
-  const transport = device.createSendTransport(event.data);
+  console.log("Create send transport data : ", event.data, {
+    id: event.data.id,
+    dtlsParameters: event.data.dtlsParameters,
+    iceCandidates: event.data.iceCandidates,
+    iceParameters: event.data.iceParameters,
+  });
+
+  const transport = device.createSendTransport({
+    id: event.data.id,
+    dtlsParameters: event.data.dtlsParameters,
+    iceCandidates: event.data.iceCandidates,
+    iceParameters: event.data.dtlsParameters,
+  });
 
   transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
     const message = {
@@ -148,7 +162,7 @@ const onProducerTransportCreated = async (event) => {
     const track = stream.getVideoTracks()[0];
     const params = { track };
 
-    producer = await transport.producer(params);
+    producer = await transport.produce(params);
   } catch (error) {
     console.error(error);
     textPublish.innerHTML = "failed!";
@@ -189,9 +203,12 @@ const IsJsonString = (str) => {
 const loadDevice = async (routerRtpCapabilities) => {
   try {
     device = new mediasoup.Device();
+    // const tr = device.createSendTransport();
+    // cons pr = tr.produce()
+    console.log("Mediasoup device created");
   } catch (error) {
     if (error.name === "UnsupportedError") {
-      console.log("browser not supported !");
+      console.error("browser not supported !");
     }
   }
 
