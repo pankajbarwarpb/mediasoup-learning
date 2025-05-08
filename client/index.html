@@ -7,75 +7,67 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 text-gray-800">
-    <div class="max-w-4xl mx-auto p-6">
-      <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-center">mediasoup sample</h1>
+    <div class="m-6">
+      <h1 class="text-2xl font-semibold text-center">mediasoup sample</h1>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        width: 100vw;
+        padding: 1rem;
+        gap: 1rem;
+      "
+    >
+      <div style="flex: 1 0">
+        <video
+          id="localVideo"
+          class="w-full rounded shadow"
+          controls
+          autoplay
+          muted
+          playsinline
+        ></video>
+        <span id="text-webcam"></span>
       </div>
-
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Local video and controls -->
-        <div class="space-y-4">
-          <video
-            id="localVideo"
-            class="w-full rounded shadow"
-            controls
-            autoplay
-            playsinline
-          ></video>
-
-          <div class="space-y-2">
-            <div
-              class="flex items-center justify-between bg-white p-3 rounded shadow"
-            >
-              <button
-                disabled
-                id="btn_webcam"
-                class="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-              >
-                Camera
-              </button>
-              <span id="webcam_status" class="text-sm text-gray-600"></span>
-            </div>
-            <div
-              class="flex items-center justify-between bg-white p-3 rounded shadow"
-            >
-              <button
-                disabled
-                id="btn_screen"
-                class="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
-              >
-                Screen
-              </button>
-              <span id="screen_status" class="text-sm text-gray-600"></span>
-            </div>
-            <div
-              class="flex items-center justify-between bg-white p-3 rounded shadow"
-            >
-              <button
-                disabled
-                id="btn_subscribe"
-                class="px-4 py-2 bg-purple-500 text-white rounded disabled:opacity-50"
-              >
-                Subscribe
-              </button>
-              <span id="subscribe_status" class="text-sm text-gray-600"></span>
-            </div>
-          </div>
-        </div>
-
-        <span id="text-publish"></span>
-
-        <!-- Remote video -->
-        <div>
-          <video
-            id="remoteVideo"
-            class="w-full rounded shadow"
-            controls
-            autoplay
-            playsinline
-          ></video>
-        </div>
+      <div style="flex: 1 0">
+        <video
+          id="remoteVideo"
+          class="w-full rounded shadow"
+          controls
+          autoplay
+          playsinline
+        ></video>
+        <span id="text-screen"></span>
       </div>
+    </div>
+    <div style="padding: 1rem; gap: 1rem; display: flex; flex-direction: row">
+      <button
+        disabled
+        id="btn_webcam"
+        class="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+      >
+        Camera
+      </button>
+      <button
+        disabled
+        id="btn_screen"
+        class="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
+      >
+        Screen
+      </button>
+      <button
+        disabled
+        id="btn_subscribe"
+        class="px-4 py-2 bg-purple-500 text-white rounded disabled:opacity-50"
+      >
+        Subscribe
+        <span id="text-subscribe"></span>
+      </button>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 m-4">
+      <span id="text-publish"></span>
     </div>
   </body>
   <script>

@@ -7,6 +7,7 @@ let btnCam,
   textWebcam,
   textScreen,
   textPublish,
+  textSubscribe,
   localVideo,
   remoteVideo,
   remoteStream,
@@ -30,12 +31,17 @@ document.addEventListener("DOMContentLoaded", () => {
   textWebcam = document.getElementById("webcam_status");
   textScreen = document.getElementById("screen_status");
   textPublish = document.getElementById("text-publish");
+  textWebcam = document.getElementById("text-webcam");
+  textScreen = document.getElementById("text-screen");
+  textSubscribe = document.getElementById("text-subscribe");
+  remoteVideo = document.querySelector("video#remoteVideo");
+  console.log({ textPublish });
   localVideo = document.getElementById("localVideo");
 
   // button event listeners
   btnCam.addEventListener("click", publish);
   btnScreen.addEventListener("click", publish);
-  // btnSub.addEventListener("click", subscribe);
+  btnSub.addEventListener("click", subscribe);
 });
 
 const connect = () => {
@@ -77,6 +83,15 @@ const connect = () => {
       case "producerTransportCreated":
         onProducerTransportCreated(resp);
         break;
+      case "subTransportCreated":
+        onSubTransportCreated(resp);
+        break;
+      case "subConnected":
+        onSubTransportCreated(resp);
+        break;
+      case "resumed":
+        console.log(event.data);
+        break;
       default:
         break;
     }
@@ -84,6 +99,76 @@ const connect = () => {
 };
 
 connect();
+
+const onSubTransportCreated = (event) => {
+  if (event.error) {
+    console.error(event.error);
+    return;
+  }
+
+  const transport = device.createRecvTransport(event.data);
+  transport.on("connect", ({ dtlsParameters }, callback, errback) => {
+    const msg = {
+      type: "connectConsumerTransport",
+      transportId: transport.id,
+      dtlsParameters,
+    };
+    const message = JSON.stringify(msg);
+    socket.send(message);
+
+    socket.addEventListener("message", (event) => {
+      const jsonValidation = IsJsonString(event.data);
+      if (!jsonValidation) {
+        console.log({ event });
+        console.error("json error");
+        return;
+      }
+
+      const resp = JSON.parse(event.data);
+      if (resp.type === "subConnected") {
+        console.log("consumer transport connected!!!");
+        callback();
+      }
+    });
+  });
+
+  transport.on("connectionstatechange", async (state) => {
+    switch (state) {
+      case "connecting":
+        textSubscribe.innerHTML = "subscribing...";
+        break;
+      case "connected":
+        remoteVideo.srcObject = remoteStream;
+        const msg = {
+          type: "resume",
+        };
+        const message = JSON.stringify(msg);
+        socket.send(message);
+        textSubscribe.innerHTML = "subscribed";
+        break;
+      case "failed":
+        transport.close();
+        textSubscribe.innerHTML = "failed!";
+        btnSub.disabled = false;
+        break;
+      default:
+        break;
+    }
+  });
+
+  const stream = consumer(transport);
+};
+
+const consumer = async (transport) => {
+  const { rtpCapabilities } = device;
+  const msg = {
+    type: "consume",
+    rtpCapabilities,
+  };
+
+  const message = JSON.stringify(msg);
+  socket.send(message);
+};
 
 const onProducerTransportCreated = async (event) => {
   if (event.error) {
@@ -98,12 +183,7 @@ const onProducerTransportCreated = async (event) => {
     iceParameters: event.data.iceParameters,
   });
 
-  const transport = device.createSendTransport({
-    id: event.data.id,
-    dtlsParameters: event.data.dtlsParameters,
-    iceCandidates: event.data.iceCandidates,
-    iceParameters: event.data.iceParameters,
-  });
+  const transport = device.createSendTransport(event.data);
 
   transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
     const message = {
@@ -150,6 +230,7 @@ const onProducerTransportCreated = async (event) => {
 
   // connection state change begin
   transport.on("connectionstatechange", (state) => {
+    console.log({ textPublish, state });
     switch (state) {
       case "connecting":
         textPublish.innerHTML = "publishing......";
@@ -189,7 +270,7 @@ const onRouterCapabilities = (resp) => {
 
 const publish = (e) => {
   isWebcam = e.target.id === "btn_webcam";
-  textPublish = isWebcam ? textWebcam : textScreen;
+  textPublish.innerHTML = isWebcam ? textWebcam : textScreen;
   btnScreen.disabled = true;
   btnCam.disabled = true;
 
@@ -201,6 +282,17 @@ const publish = (e) => {
 
   const resp = JSON.stringify(message);
   socket.send(resp);
+};
+
+const subscribe = () => {
+  btnSub.disabled = true;
+  const msg = {
+    type: "createConsumerTransport",
+    forceTcp: false,
+  };
+
+  const message = JSON.stringify(msg);
+  socket.send(message);
 };
 
 const IsJsonString = (str) => {
