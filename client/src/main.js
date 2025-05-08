@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   textWebcam = document.getElementById("webcam_status");
   textScreen = document.getElementById("screen_status");
   textPublish = document.getElementById("text-publish");
+  localVideo = document.getElementById("localVideo");
 
   // button event listeners
   btnCam.addEventListener("click", publish);
@@ -66,7 +67,7 @@ const connect = () => {
       return;
     }
 
-    console.log("SOCKET MESSAGE: ", { resp: event.data });
+    console.log("SOCKET MESSAGE: ", { event });
 
     const resp = JSON.parse(event.data);
     switch (resp.type) {
@@ -101,7 +102,7 @@ const onProducerTransportCreated = async (event) => {
     id: event.data.id,
     dtlsParameters: event.data.dtlsParameters,
     iceCandidates: event.data.iceCandidates,
-    iceParameters: event.data.dtlsParameters,
+    iceParameters: event.data.iceParameters,
   });
 
   transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
@@ -112,8 +113,19 @@ const onProducerTransportCreated = async (event) => {
 
     const resp = JSON.stringify(message);
     socket.send(resp);
-    socket.addEventListener("producerConnected", (event) => {
-      callback();
+    socket.addEventListener("message", (event) => {
+      const jsonValidation = IsJsonString(event.data);
+      if (!jsonValidation) {
+        console.log({ event });
+        console.error("json error");
+        return;
+      }
+
+      const resp = JSON.parse(event.data);
+      if (resp.type === "producerConnected") {
+        console.log("got producerConnected!!!");
+        callback();
+      }
     });
   });
 
@@ -203,8 +215,6 @@ const IsJsonString = (str) => {
 const loadDevice = async (routerRtpCapabilities) => {
   try {
     device = new mediasoup.Device();
-    // const tr = device.createSendTransport();
-    // cons pr = tr.produce()
     console.log("Mediasoup device created");
   } catch (error) {
     if (error.name === "UnsupportedError") {
