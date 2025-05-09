@@ -13,7 +13,7 @@ let btnCam,
   remoteStream,
   device,
   producer,
-  consumeTransport,
+  consumerTransport,
   userId,
   isWebcam,
   produceCallback,
@@ -54,7 +54,7 @@ const connect = () => {
       type: "getRouterRtpCapabilities",
     };
     const resp = JSON.stringify(msg);
-    socket.send(resp);
+    sendMessage(resp);
   };
 
   socket.onclose = () => {
@@ -73,7 +73,7 @@ const connect = () => {
       return;
     }
 
-    console.log("SOCKET MESSAGE: ", { event });
+    console.log("SOCKET MESSAGE: ", { event, data: JSON.parse(event.data) });
 
     const resp = JSON.parse(event.data);
     switch (resp.type) {
@@ -87,11 +87,13 @@ const connect = () => {
         onSubTransportCreated(resp);
         break;
       case "subConnected":
-        onSubTransportCreated(resp);
+        console.log(resp);
         break;
       case "resumed":
         console.log(event.data);
         break;
+      case "subscribed":
+        onSubscribed(resp);
       default:
         break;
     }
@@ -100,12 +102,30 @@ const connect = () => {
 
 connect();
 
+const onSubscribed = async (event) => {
+  const { producerId, id, kind, rtpParameters } = event.data;
+
+  let codecOptions = {};
+  const consumer = await consumerTransport.consume({
+    producerId,
+    id,
+    kind,
+    rtpParameters,
+    codecOptions,
+  });
+
+  const stream = new MediaStream();
+  stream.addTrack(consumer.track);
+  remoteStream = stream;
+};
+
 const onSubTransportCreated = (event) => {
   if (event.error) {
     console.error(event.error);
     return;
   }
-
+  
+  console.log("** onSubTransportCreated **", {event})
   const transport = device.createRecvTransport(event.data);
   transport.on("connect", ({ dtlsParameters }, callback, errback) => {
     const msg = {
@@ -114,7 +134,7 @@ const onSubTransportCreated = (event) => {
       dtlsParameters,
     };
     const message = JSON.stringify(msg);
-    socket.send(message);
+    sendMessage(message);
 
     socket.addEventListener("message", (event) => {
       const jsonValidation = IsJsonString(event.data);
@@ -143,7 +163,7 @@ const onSubTransportCreated = (event) => {
           type: "resume",
         };
         const message = JSON.stringify(msg);
-        socket.send(message);
+        sendMessage(message);
         textSubscribe.innerHTML = "subscribed";
         break;
       case "failed":
@@ -156,6 +176,8 @@ const onSubTransportCreated = (event) => {
     }
   });
 
+  consumerTransport = transport;
+
   const stream = consumer(transport);
 };
 
@@ -167,7 +189,7 @@ const consumer = async (transport) => {
   };
 
   const message = JSON.stringify(msg);
-  socket.send(message);
+  sendMessage(message);
 };
 
 const onProducerTransportCreated = async (event) => {
@@ -192,7 +214,7 @@ const onProducerTransportCreated = async (event) => {
     };
 
     const resp = JSON.stringify(message);
-    socket.send(resp);
+    sendMessage(resp);
     socket.addEventListener("message", (event) => {
       const jsonValidation = IsJsonString(event.data);
       if (!jsonValidation) {
@@ -220,7 +242,7 @@ const onProducerTransportCreated = async (event) => {
         rtpParameters,
       };
       const resp = JSON.stringify(message);
-      socket.send(resp);
+      sendMessage(resp);
       socket.addEventListener("published", (resp) => {
         callback(resp.data.id);
       });
@@ -281,7 +303,7 @@ const publish = (e) => {
   };
 
   const resp = JSON.stringify(message);
-  socket.send(resp);
+  sendMessage(resp);
 };
 
 const subscribe = () => {
@@ -292,7 +314,7 @@ const subscribe = () => {
   };
 
   const message = JSON.stringify(msg);
-  socket.send(message);
+  sendMessage(message);
 };
 
 const IsJsonString = (str) => {
@@ -336,4 +358,13 @@ const getUserMedia = async (transport, isWebcam) => {
   }
 
   return stream;
+};
+
+const sendMessage = (msg) => {
+  socket.send(msg);
+  try {
+    console.log("SENT : ", JSON.parse(msg));
+  } catch (error) {
+    console.log("SENT : ", msg);
+  }
 };

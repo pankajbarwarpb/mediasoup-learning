@@ -31,6 +31,7 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
       }
 
       const event = JSON.parse(message);
+      console.log("INCOMING : ", event);
 
       switch (event.type) {
         case "getRouterRtpCapabilities":
@@ -114,6 +115,7 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
 
   const onConsume = async (event: any, ws: WebSocket) => {
     const res = await createConsumer(producer, event.rtpCapabilities);
+    send(ws, "subscribed", res);
   };
 
   const onResume = async (event: any, ws: WebSocket) => {
