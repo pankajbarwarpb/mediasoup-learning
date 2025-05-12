@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { createWorker } from "./worker";
+import { createRouter } from "./worker";
 import {
   Consumer,
   Producer,
@@ -17,7 +17,7 @@ let consumer: Consumer;
 
 const WebsocketConnection = async (websocket: WebSocket.Server) => {
   try {
-    mediasoupRouter = await createWorker();
+    mediasoupRouter = await createRouter();
   } catch (error) {
     throw error;
   }
@@ -150,6 +150,7 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
     };
 
     const resp = JSON.stringify(message);
+    console.log("SENT : ", JSON.stringify(message, null, 2));
 
     ws.send(resp);
   };
@@ -160,7 +161,8 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
       data: msg,
     };
     const resp = JSON.stringify(message);
-
+    
+    console.log("BROADCASTED : ", JSON.stringify(message, null, 2));
     ws.clients.forEach((client) => {
       client.send(resp);
     });
@@ -178,6 +180,7 @@ const WebsocketConnection = async (websocket: WebSocket.Server) => {
     }
 
     try {
+      // only used when going to resume
       consumer = await consumerTransport.consume({
         producerId: producer.id,
         rtpCapabilities,

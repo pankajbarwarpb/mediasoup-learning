@@ -178,10 +178,10 @@ const onSubTransportCreated = (event) => {
 
   consumerTransport = transport;
 
-  const stream = consumer(transport);
+  startConsuming(transport);
 };
 
-const consumer = async (transport) => {
+const startConsuming = async (transport) => {
   const { rtpCapabilities } = device;
   const msg = {
     type: "consume",

@@ -8,7 +8,7 @@ const worker: Array<{ worker: Worker; router: Router }> = [];
 
 let nextMediasoupWorkerIdx = 0;
 
-export const createWorker = async () => {
+export const createRouter = async () => {
   const worker = await mediasoup.createWorker({
     logLevel: config.mediasoup.worker.logLevel,
     logTags: config.mediasoup.worker.logTags,
