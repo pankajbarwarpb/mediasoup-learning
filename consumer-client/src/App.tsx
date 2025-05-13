@@ -1,35 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useCallback, useEffect, useRef, useState } from "react";
+import "./App.css";
+import { io, Socket } from "socket.io-client";
+import { Device } from "mediasoup-client";
+import type { RtpCapabilities } from "mediasoup-client/types";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [, setSocket] = useState<Socket | null>(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  const device = useRef<Device | null>(null);
+
+  useEffect(() => {
+    device.current = new Device();
+  }, []);
+
+  const onRouterCapabilites = useCallback(async (data: RtpCapabilities) => {
+    console.log({ data });
+    if (!device.current?.loaded) {
+      await device.current?.load({
+        routerRtpCapabilities: data,
+      });
+    }
+  }, []);
+
+  const onConnect = useCallback(
+    (ws: Socket) => {
+      setSocket(ws);
+      console.log("Connected to ws server: ", ws.id);
+      ws.emit("getRouterRtpCapabilities");
+
+      ws.on("routerCapabilities", onRouterCapabilites);
+    },
+    [onRouterCapabilites]
+  );
+
+  useEffect(() => {
+    const ws = io("http://localhost:8000");
+
+    ws.onAny((event) => {
+      console.log("onAny", { event });
+    });
+
+    ws.on("connect", () => {
+      onConnect(ws);
+    });
+
+    ws.on("disconnect", (reason) => {
+      console.log("Disconnected from ws server: ", reason);
+    });
+
+    ws.on("connect_error", (err) => {
+      console.error("WebSocket connection error:", err.message);
+    });
+
+    return () => {
+      ws.disconnect();
+    };
+  }, [onConnect]);
+
+  return <div></div>;
 }
 
-export default App
+export default App;

@@ -19,12 +19,10 @@
         gap: 1rem;
       "
     >
-      <div style="flex: 1 0; height: 50vh">
+      <div style="flex: 1 0">
         <video
           id="localVideo"
-          class="rounded shadow"
-          height="50vh"
-          style="height: 50vh"
+          class="w-full rounded shadow"
           controls
           autoplay
           muted
@@ -32,7 +30,7 @@
         ></video>
         <span id="text-webcam"></span>
       </div>
-      <div style="flex: 1 0; display: none">
+      <div style="flex: 1 0">
         <video
           id="remoteVideo"
           class="w-full rounded shadow"
@@ -59,7 +57,8 @@
         Screen
       </button>
       <button
-        style="display: none"
+      disabled
+      title="Disabled For Now by The Developer"
         id="btn_subscribe"
         class="px-4 py-2 bg-purple-500 text-white rounded disabled:opacity-50"
       >
