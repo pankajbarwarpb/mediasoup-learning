@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "DEBUG=mediasoup:* ts-node src"
+    "start": "DEBUG=mediasoup:* ts-node src",
+    "dev": "DEBUG=mediasoup:* nodemon --watch src --ext ts,json --exec ts-node src"
   },
   "keywords": [],
   "author": "",

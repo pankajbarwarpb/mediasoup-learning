@@ -16,6 +16,8 @@ let btnCam,
   consumerTransport,
   isWebcam;
 
+let remoteTransportId;
+
 const socket = io("http://localhost:8000");
 
 socket.on("connect", () => {
@@ -50,7 +52,6 @@ socket.on("connect", () => {
   socket.on("resumed", (ev) => {
     console.log("resumed", { ev });
   });
-
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -114,7 +115,7 @@ connect();
 const onSubscribed = async (event) => {
   try {
     const { producerId, id, kind, rtpParameters } = event;
-  
+
     let codecOptions = {};
     const consumer = await consumerTransport.consume({
       producerId,
@@ -123,12 +124,12 @@ const onSubscribed = async (event) => {
       rtpParameters,
       codecOptions,
     });
-  
+
     const stream = new MediaStream();
     stream.addTrack(consumer.track);
     remoteStream = stream;
   } catch (error) {
-    console.error("ERROR onsubscribed", {event, error})
+    console.error("ERROR onsubscribed", { event, error });
   }
 };
 
@@ -202,12 +203,15 @@ const onProducerTransportCreated = async (event) => {
     iceParameters: event.iceParameters,
   });
 
+  remoteTransportId = event.id;
+
   const transport = device.createSendTransport(event);
 
   transport.on("connect", async ({ dtlsParameters }, callback) => {
     const message = {
       type: "connectProducerTransport",
       dtlsParameters,
+      transportId: remoteTransportId,
     };
 
     sendMessage(message);
@@ -217,21 +221,18 @@ const onProducerTransportCreated = async (event) => {
   });
 
   // begin transport producer
-  transport.on(
-    "produce",
-    async ({ kind, rtpParameters }, callback) => {
-      const message = {
-        type: "produce",
-        transportId: transport.id,
-        kind,
-        rtpParameters,
-      };
-      sendMessage(message);
-      socket.addEventListener("published", (resp) => {
-        callback(resp.data.id);
-      });
-    }
-  );
+  transport.on("produce", async ({ kind, rtpParameters }, callback) => {
+    const message = {
+      type: "produce",
+      transportId: transport.id,
+      kind,
+      rtpParameters,
+    };
+    sendMessage(message);
+    socket.addEventListener("published", (resp) => {
+      callback(resp.data.id);
+    });
+  });
   // end transport producer
 
   // connection state change begin
@@ -319,7 +320,7 @@ const loadDevice = async (routerRtpCapabilities) => {
     }
   }
 
-  console.log('device',device);
+  console.log("device", device);
 
   await device.load({ routerRtpCapabilities });
 };

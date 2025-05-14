@@ -51,6 +51,17 @@ const WebsocketConnection = async (io: Server) => {
       onRouterRtpCapabilities(event, socket);
     });
 
+    socket.on("requestList", () => {
+      socket.emit("producersList", {
+        producerTransports: Array.from(producerTransports.entries()).map(
+          ([transportId, info]) => ({
+            producerTransportId: info.transport.id,
+            producerIds: Array.from(info.producers.keys()),
+          })
+        ),
+      });
+    });
+
     socket.on("createProducerTransport", (event) => {
       onCreateProducerTransport(event, socket);
     });
